@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "psych-eval-bot"
+version = "0.1.0"
+description = "Evaluates cast members and gives a sanity score"
+authors = ["DrProfSgtMrJ"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+discord = "^2.3.2"
+dotenv = "^0.9.9"
+openai = "^2.15.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
