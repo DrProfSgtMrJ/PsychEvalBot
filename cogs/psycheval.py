@@ -14,14 +14,12 @@ class PsychEvalCog(commands.Cog):
         self.bot = bot
 
     @commands.command(name="evaluate", help="Start your psychological evaluation.")
-    async def evaluate(self, ctx: commands.Context):
+    async def evaluate(self, ctx: commands.Context, num_questions: int = 10):
 
         response = []
         def check(message: Message) -> bool:
             return message.author == ctx.author and message.channel == ctx.channel
 
-        # Placeholder for actual evaluation logic
-        num_questions = 2  # Example: number of questions to generate
         try:
             questions = await generate_questions(num_questions)
             if not questions:
@@ -32,7 +30,7 @@ class PsychEvalCog(commands.Cog):
             return
 
         try:
-            for i, question in enumerate(questions):
+            for question in questions:
                 await ctx.send(f"Question {question}")
                 msg = await self.bot.wait_for("message", check=check, timeout=120.0)
                 response.append(msg.content)
