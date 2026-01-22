@@ -18,21 +18,33 @@ async def generate_questions(num_questions: int) -> list[str]:
     """
     system_prompt = dedent(
         """
-        You are a helpful assistant that generates psychological evaluation questions for a fun Discord Survivor
-        ORG game. The questions should be somewhat silly and nonsensical, suitable for light-hearted psychological evaluation.
-        Please follow Discord content guidelines and avoid sensitive topics.
-        
-        I want the questions to not have a clear 'sane' answer. These questions will be used to evaluate the sanity of users
-        based on their responses.
-        
-        An example could be:
-         - Would you rather fight one horse-sized duck or a hundred duck-sized horses?
-         - If you could only eat one food for the rest of your life, what would it be and why?
-         - If you were a fruit, which fruit would you be and why?
+        You are an automated psychiatric intake system designed for experimental evaluation.
+        Your role is to generate psychological assessment questions that are:
+            - Slightly abstract or semi-nonsensical
+            - Open-ended, but still answerable
+            - Unsettling or ambiguous without being explicit
+            - Not directly diagnosable
+            - Suitable for a game setting
+
+        The questions should make the subject reflect, hesitate, or overthink.
+        Avoid standard therapy questions or clinical language.
         """
     ).strip()
 
-    user_prompt = f"Generate {num_questions} psychological evaluation questions."
+    user_prompt = dedent(
+        f"""
+        Generate exactly {num_questions} unique psychological evaluation questions.
+
+        Guidelines:
+        - Questions should feel oddly specific or subtly illogical
+        - Avoid yes/no questions when possible
+        - Do not reference mental illness directly
+        - Questions may involve time, memory, perception, trust, identity, or control
+        - Each question should be one sentence
+
+        Return ONLY the questions as a numbered list.
+        """
+    ).strip()
 
     response = client.chat.completions.create(
         model=OPENAI_MODEL,
@@ -50,34 +62,48 @@ async def generate_questions(num_questions: int) -> list[str]:
         return questions
     return []
 
-async def evaluate_sanity(answers: list[str]) -> int:
+async def evaluate_sanity(questions: list[str], answers: list[str]) -> int:
     """
     Evaluate the sanity of the user based on their answers using OpenAI.
     """
     system_prompt = dedent(
         """
-        You are a psychological evaluation assistant for a silly Discord game. Based on the user's answers,
-        provide a sanity score from 0-10.
+            You are an automated psychological evaluation system used in a competitive game.
 
-        IMPORTANT SCORING GUIDELINES:
-        - 0-2: Completely nonsensical, incoherent, or disturbing responses
-        - 3-4: Very bizarre or illogical answers with little coherence
-        - 5-6: Quirky, weird, or silly answers but still somewhat understandable (THIS SHOULD BE THE AVERAGE)
-        - 7-8: Creative but mostly logical responses
-        - 9-10: Perfectly reasonable and boring answers (reserve for genuinely mundane responses)
+            Your task is to output a SINGLE INTEGER from 0 to 10 representing a sanity score.
 
-        Remember: These questions are meant to be silly and have no "correct" answer. 
-        Most people should score in the 4-7 range. Be critical and look for oddities, 
-        inconsistencies, or overly creative responses. A "normal" person answering silly 
-        questions should still sound a bit weird.
+            SCORING CONSTRAINTS:
+            - Scores follow a bell curve distribution.
+            - The average score should be between 6 and 7.
+            - Scores below 4 are uncommon but allowed.
+            - Scores below 2 are extremely rare.
+            - Scores above 8 are rare.
+            - Scores of 0 or 10 should be exceptionally rare.
 
-        The only output should be the integer score with no explanation.
+            INTERPRETATION RULES:
+            - Begin from a baseline of 6.
+            - Adjust upward or downward based on:
+            - Internal consistency of answers
+            - Emotional stability
+            - Rigid or absolutist thinking
+            - Comfort with ambiguity
+            - Self-awareness versus deflection
+            - Make small adjustments unless there is strong justification.
+            - Do NOT reward socially desirable or performative answers.
+
+            OUTPUT RULE:
+            - Output ONLY a single integer from 0 to 10.
+            - Do not include words, punctuation, explanations, or formatting.
+            - Do not include whitespace before or after the number.
         """
     ).strip()
 
-    user_prompt = "Here are the user's answers:\n" + "\n".join(
-        [f"Q{i+1}: {answer}" for i, answer in enumerate(answers)]
-    ) + "\nPlease provide a brief evaluation of their sanity."
+        # Create question-answer pairs
+    qa_pairs = []
+    for i, (question, answer) in enumerate(zip(questions, answers), 1):
+        qa_pairs.append(f"Q{i}: {question}\nA{i}: {answer}")
+    
+    user_prompt = "Here are the questions and the user's answers:\n\n" + "\n\n".join(qa_pairs) + "\n\nPlease provide a sanity score (0-10)."
 
     response = client.chat.completions.create(
         model=OPENAI_MODEL,

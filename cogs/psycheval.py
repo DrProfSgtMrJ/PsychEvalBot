@@ -33,10 +33,10 @@ class PsychEvalCog(commands.Cog):
 
         try:
             for i, question in enumerate(questions):
-                await ctx.send(f"Question {i + 1}: {question}")
+                await ctx.send(f"Question {question}")
                 msg = await self.bot.wait_for("message", check=check, timeout=120.0)
                 response.append(msg.content)
-            sanity_evaluation = await evaluate_sanity(response)
+            sanity_evaluation = await evaluate_sanity(questions=questions, answers=response)
         except Exception as e:
             await ctx.send(f"An error occurred while sending questions: {e}")
         except asyncio.TimeoutError:
