@@ -2,7 +2,7 @@ import asyncio
 from discord import Message
 from discord.ext import commands
 
-from ai.ai import generate_questions
+from ai.ai import generate_questions, evaluate_sanity
 
 
 
@@ -21,7 +21,7 @@ class PsychEvalCog(commands.Cog):
             return message.author == ctx.author and message.channel == ctx.channel
 
         # Placeholder for actual evaluation logic
-        num_questions = 10  # Example: number of questions to generate
+        num_questions = 2  # Example: number of questions to generate
         try:
             questions = await generate_questions(num_questions)
             if not questions:
@@ -36,10 +36,12 @@ class PsychEvalCog(commands.Cog):
                 await ctx.send(f"Question {i + 1}: {question}")
                 msg = await self.bot.wait_for("message", check=check, timeout=120.0)
                 response.append(msg.content)
+            sanity_evaluation = await evaluate_sanity(response)
         except Exception as e:
             await ctx.send(f"An error occurred while sending questions: {e}")
         except asyncio.TimeoutError:
             await ctx.send("You took too long to respond. Please start the evaluation again.")
             return
-        await ctx.send("Thank you for completing the evaluation!")
+        await ctx.send("Thank you for completing the evaluation! Your sanity score is being calculated...")
+        await ctx.send(f"Your sanity score is: {sanity_evaluation}/10")
         print(f"User {ctx.author} responses: {response}")  # For debugging purposes
